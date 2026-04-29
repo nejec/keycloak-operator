@@ -24,23 +24,25 @@ The Keycloak Operator is a Kubernetes operator developed by [**Hostzero**](https
 
 ## Supported Resources
 
-| Resource | Description |
-|----------|-------------|
-| `KeycloakInstance` | Connection to a Keycloak server (namespaced) |
-| `ClusterKeycloakInstance` | Connection to a Keycloak server (cluster-scoped) |
-| `KeycloakRealm` | Realm configuration (namespaced) |
-| `ClusterKeycloakRealm` | Realm configuration (cluster-scoped) |
-| `KeycloakClient` | OAuth2/OIDC client configuration |
-| `KeycloakClientScope` | Client scope configuration |
-| `KeycloakProtocolMapper` | Token claim mappers for clients/scopes |
-| `KeycloakUser` | User management |
-| `KeycloakUserCredential` | User password management |
-| `KeycloakGroup` | Group management |
-| `KeycloakRole` | Realm and client role definitions |
-| `KeycloakRoleMapping` | Role-to-user/group assignments |
-| `KeycloakIdentityProvider` | External identity provider configuration |
-| `KeycloakComponent` | LDAP federation, key providers, etc. |
-| `KeycloakOrganization` | Organization management (Keycloak 26+) |
+The operator manages Keycloak through a set of Custom Resource Definitions covering instances, realms, clients, users, groups, roles, identity providers, federation components, authentication flows, organizations, and more.
+
+A minimal example looks like this:
+
+```yaml
+apiVersion: keycloak.hostzero.com/v1beta1
+kind: KeycloakRealm
+metadata:
+  name: my-realm
+spec:
+  instanceRef:
+    name: my-keycloak
+  definition:
+    realm: my-realm
+    enabled: true
+    displayName: My Realm
+```
+
+See [Custom Resource Definitions](./crds.md) for the full list of supported resources and their schemas.
 
 ## Enterprise Support
 
