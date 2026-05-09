@@ -26,6 +26,8 @@ var (
 // sigs.k8s.io/controller-runtime/pkg/scheme.Builder, kept here so that this api
 // package depends only on k8s.io/apimachinery. The behaviour is intentionally
 // identical to the upstream Builder.
+//
+// +kubebuilder:object:generate=false
 type Builder struct {
 	GroupVersion schema.GroupVersion
 	runtime.SchemeBuilder
