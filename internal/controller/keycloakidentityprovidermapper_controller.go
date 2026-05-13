@@ -99,14 +99,20 @@ func (r *KeycloakIdentityProviderMapperReconciler) Reconcile(ctx context.Context
 	definition := setFieldInDefinition(mapper.Spec.Definition.Raw, "name", mapperName)
 	definition = setFieldInDefinition(definition, "identityProviderAlias", alias)
 
-	var mapperID string
+	// Keep the full representation around to drift-compare below — avoids a
+	// second GET round-trip per mapper per reconcile.
+	var (
+		mapperID       string
+		existingMapper *keycloak.IdentityProviderMapperRepresentation
+	)
 	existingMappers, err := kc.GetIdentityProviderMappers(ctx, realmName, alias)
 	if err == nil {
-		for _, m := range existingMappers {
-			if m.Name != nil && *m.Name == mapperName {
-				if m.ID != nil {
-					mapperID = *m.ID
+		for i := range existingMappers {
+			if existingMappers[i].Name != nil && *existingMappers[i].Name == mapperName {
+				if existingMappers[i].ID != nil {
+					mapperID = *existingMappers[i].ID
 				}
+				existingMapper = &existingMappers[i]
 				break
 			}
 		}
@@ -121,17 +127,49 @@ func (r *KeycloakIdentityProviderMapperReconciler) Reconcile(ctx context.Context
 		}
 		log.Info("identity provider mapper created successfully", "name", mapperName, "id", mapperID)
 	} else {
-		definition = mergeIDIntoDefinition(definition, &mapperID)
-		log.Info("updating identity provider mapper", "name", mapperName, "realm", realmName, "alias", alias)
-		if err := kc.UpdateIdentityProviderMapper(ctx, realmName, alias, mapperID, definition); err != nil {
-			RecordError(controllerName, "keycloak_api_error")
-			return r.updateStatus(ctx, mapper, false, "UpdateFailed", fmt.Sprintf("Failed to update identity provider mapper: %v", err), mapperID, mapperName, alias)
+		drifted, compareErr := identityProviderMapperDrifted(definition, existingMapper)
+		if compareErr != nil {
+			log.Error(compareErr, "failed to compare current mapper state, falling through to update")
 		}
-		log.Info("identity provider mapper updated successfully", "name", mapperName)
+		if drifted {
+			definition = mergeIDIntoDefinition(definition, &mapperID)
+			log.Info("updating identity provider mapper", "name", mapperName, "realm", realmName, "alias", alias)
+			if err := kc.UpdateIdentityProviderMapper(ctx, realmName, alias, mapperID, definition); err != nil {
+				RecordError(controllerName, "keycloak_api_error")
+				return r.updateStatus(ctx, mapper, false, "UpdateFailed", fmt.Sprintf("Failed to update identity provider mapper: %v", err), mapperID, mapperName, alias)
+			}
+			log.Info("identity provider mapper updated successfully", "name", mapperName)
+		} else {
+			log.V(1).Info("identity provider mapper already in sync, skipping update", "name", mapperName)
+		}
 	}
 
 	mapper.Status.ResourcePath = fmt.Sprintf("/admin/realms/%s/identity-provider/instances/%s/mappers/%s", realmName, alias, mapperID)
 	return r.updateStatus(ctx, mapper, true, "Ready", "Identity provider mapper synchronized", mapperID, mapperName, alias)
+}
+
+// identityProviderMapperDrifted compares the desired mapper definition against
+// the representation Keycloak returned from GET. Returns true when the
+// reconciler should issue a PUT (the safe default: drifted=true also covers
+// "we couldn't decide" cases — caller logs the error and updates anyway).
+//
+// Decision matrix:
+//   - current == nil: no representation to compare → drifted (force update).
+//   - marshal of current fails: drifted + error (caller logs, updates anyway).
+//   - definitionsMatch returns true: in sync → not drifted.
+//   - otherwise: drifted.
+func identityProviderMapperDrifted(desired json.RawMessage, current *keycloak.IdentityProviderMapperRepresentation) (bool, error) {
+	if current == nil {
+		return true, nil
+	}
+	currentJSON, err := json.Marshal(current)
+	if err != nil {
+		return true, fmt.Errorf("marshal current mapper state: %w", err)
+	}
+	if definitionsMatch(desired, currentJSON) {
+		return false, nil
+	}
+	return true, nil
 }
 
 // getKeycloakClientAndParent loads the parent KeycloakIdentityProvider, ensures
