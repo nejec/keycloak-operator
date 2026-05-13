@@ -855,7 +855,6 @@ func toObjectSlice(v interface{}) ([]map[string]interface{}, bool) {
 	return result, true
 }
 
-
 // SetupWithManager sets up the controller with the Manager
 func (r *KeycloakClientReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
