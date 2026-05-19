@@ -251,7 +251,7 @@ That workflow regenerates the OLM bundle (`make bundle`), copies it into a fork 
 
 Repository secrets required by the workflow:
 
-- `OPERATORHUB_PAT` — PAT with `repo` scope on the community-operators fork.
+- `OPERATORHUB_PAT` — **classic** PAT with the `public_repo` scope. A fine-grained PAT does not work here: opening a PR against the upstream `k8s-operatorhub/community-operators` calls a GraphQL mutation on that repo, which fine-grained tokens cannot be authorised for (they can only grant permissions on repos owned by the token's account).
 - `OPERATORHUB_FORK_OWNER` — owner of the fork (defaults to the org running the workflow).
 
 To regenerate the bundle locally:

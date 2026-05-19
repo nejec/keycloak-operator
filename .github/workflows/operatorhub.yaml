@@ -8,8 +8,9 @@ name: Publish to OperatorHub.io
 # Required secrets:
 #   OPERATORHUB_FORK_OWNER  GitHub user/org that owns the community-operators fork.
 #                           (Defaults to ${{ github.repository_owner }} if unset.)
-#   OPERATORHUB_PAT         PAT with `repo` scope able to push to the fork and
-#                           open PRs against k8s-operatorhub/community-operators.
+#   OPERATORHUB_PAT         Classic PAT with the `public_repo` scope. A fine-grained
+#                           PAT does not work for cross-repo PR creation against the
+#                           upstream community-operators repo.
 on:
   workflow_dispatch:
     inputs:
@@ -78,7 +79,7 @@ jobs:
         run: ./bin/operator-sdk bundle validate ./bundle --select-optional name=operatorhub
 
       - name: Upload bundle artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: bundle-${{ steps.version.outputs.version }}
           path: bundle/
