@@ -131,12 +131,16 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
+OPM ?= $(LOCALBIN)/opm
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.3
 CONTROLLER_TOOLS_VERSION ?= v0.17.2
 ENVTEST_VERSION ?= release-0.19
 GOLANGCI_LINT_VERSION ?= v2.11.4
+OPERATOR_SDK_VERSION ?= v1.41.1
+OPM_VERSION ?= v1.49.0
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -157,6 +161,30 @@ $(ENVTEST): $(LOCALBIN)
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+
+.PHONY: operator-sdk
+operator-sdk: $(OPERATOR_SDK) ## Download operator-sdk locally if necessary.
+$(OPERATOR_SDK): $(LOCALBIN)
+	@[ -f $(OPERATOR_SDK) ] || { \
+	set -e ;\
+	OS=$$(go env GOOS) ;\
+	ARCH=$$(go env GOARCH) ;\
+	echo "Downloading operator-sdk $(OPERATOR_SDK_VERSION) for $${OS}/$${ARCH}" ;\
+	curl -fsSL -o $(OPERATOR_SDK) "https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH}" ;\
+	chmod +x $(OPERATOR_SDK) ;\
+	}
+
+.PHONY: opm
+opm: $(OPM) ## Download opm locally if necessary.
+$(OPM): $(LOCALBIN)
+	@[ -f $(OPM) ] || { \
+	set -e ;\
+	OS=$$(go env GOOS) ;\
+	ARCH=$$(go env GOARCH) ;\
+	echo "Downloading opm $(OPM_VERSION) for $${OS}/$${ARCH}" ;\
+	curl -fsSL -o $(OPM) "https://github.com/operator-framework/operator-registry/releases/download/$(OPM_VERSION)/$${OS}-$${ARCH}-opm" ;\
+	chmod +x $(OPM) ;\
+	}
 
 # go-install-tool will 'go install' any package with custom target and target.
 define go-install-tool
@@ -271,3 +299,53 @@ kind-reset: ## Reset cluster to clean state.
 .PHONY: kind-delete
 kind-delete: ## Delete the Kind cluster.
 	./hack/setup-kind.sh delete
+
+##@ OLM Bundle (OperatorHub.io)
+
+# VERSION is the operator version baked into the bundle (no `v` prefix, e.g. 0.8.0).
+# Defaults to the Helm chart version so a single source of truth drives releases.
+VERSION ?= $(shell yq '.version' charts/keycloak-operator/Chart.yaml)
+
+# Channel selection for the generated bundle. `alpha` matches the existing
+# OperatorHub.io entry; switch to `stable` once we're confident in upgrades.
+CHANNELS ?= alpha
+DEFAULT_CHANNEL ?= alpha
+BUNDLE_CHANNELS := --channels=$(CHANNELS)
+BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
+BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
+
+# Image references injected into the CSV.
+IMAGE_TAG_BASE ?= ghcr.io/hostzero-gmbh/keycloak-operator
+BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+
+# Always patch the CSV's containerImage to a digest- or tag-pinned reference
+# that the community-operators pipeline can pull. Override IMG on the CLI to
+# point at a specific tag (e.g. IMG=ghcr.io/.../keycloak-operator:v0.8.0).
+OPERATOR_IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
+
+# Package name baked into the bundle. Must match the operators/<name>/ directory
+# in k8s-operatorhub/community-operators. We pass this on the CLI rather than
+# storing it in a PROJECT file because the CSV base in config/manifests/ is
+# hand-maintained — there's no scaffolding to keep in sync.
+BUNDLE_PACKAGE ?= hostzero-keycloak-operator
+
+.PHONY: bundle
+bundle: manifests kustomize operator-sdk ## Generate the OLM bundle under bundle/.
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(OPERATOR_IMG)
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS) --package=$(BUNDLE_PACKAGE)
+	# Restore the dev image reference in config/manager so local builds aren't affected.
+	cd config/manager && $(KUSTOMIZE) edit set image controller=keycloak-operator:dev
+	$(OPERATOR_SDK) bundle validate ./bundle
+
+.PHONY: bundle-build
+bundle-build: ## Build the OLM bundle image.
+	$(CONTAINER_TOOL) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+.PHONY: bundle-push
+bundle-push: ## Push the OLM bundle image.
+	$(CONTAINER_TOOL) push $(BUNDLE_IMG)
+
+.PHONY: bundle-run
+bundle-run: operator-sdk ## Install the bundle into the current cluster via OLM (for smoke testing).
+	$(OPERATOR_SDK) run bundle $(BUNDLE_IMG)

@@ -1,0 +1,149 @@
+name: Publish to OperatorHub.io
+
+# Manual trigger. Generates the OLM bundle for the requested version and
+# opens a PR against k8s-operatorhub/community-operators. The community-operators
+# pipeline auto-merges once CI passes, provided the reviewers listed in
+# operators/hostzero-keycloak-operator/ci.yaml approve via the bot.
+#
+# Required secrets:
+#   OPERATORHUB_FORK_OWNER  GitHub user/org that owns the community-operators fork.
+#                           (Defaults to ${{ github.repository_owner }} if unset.)
+#   OPERATORHUB_PAT         PAT with `repo` scope able to push to the fork and
+#                           open PRs against k8s-operatorhub/community-operators.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Operator version to publish (without leading v, e.g. 0.8.0). Defaults to the Helm chart version.'
+        required: false
+        type: string
+      replaces:
+        description: 'Previous version that this release replaces (without leading v). Leave empty for the first release in a channel.'
+        required: false
+        type: string
+      dry_run:
+        description: 'Generate the bundle and upload it as an artifact without opening a PR.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Generate bundle and open PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION=$(yq '.version' charts/keycloak-operator/Chart.yaml)
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Publishing version ${VERSION}"
+
+      - name: Generate OLM bundle
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          make bundle VERSION="$VERSION" OPERATOR_IMG="ghcr.io/hostzero-gmbh/keycloak-operator:v$VERSION"
+
+      - name: Inject createdAt and replaces into CSV
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          REPLACES: ${{ inputs.replaces }}
+        run: |
+          CSV="bundle/manifests/hostzero-keycloak-operator.clusterserviceversion.yaml"
+          # operator-sdk emits the current date but using yq normalises formatting
+          # and lets us inject `spec.replaces` for upgrade graph correctness.
+          CREATED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ) yq -i '.metadata.annotations.createdAt = strenv(CREATED_AT)' "$CSV"
+          if [ -n "$REPLACES" ]; then
+            REPLACES_NAME="hostzero-keycloak-operator.v$REPLACES" yq -i '.spec.replaces = strenv(REPLACES_NAME)' "$CSV"
+          fi
+          # Strip the testing-only `replaces` placeholder if no upgrade chain was supplied.
+          yq -i 'del(.spec.replaces | select(. == ""))' "$CSV"
+
+      - name: Validate bundle
+        run: ./bin/operator-sdk bundle validate ./bundle --select-optional name=operatorhub
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ steps.version.outputs.version }}
+          path: bundle/
+
+      - name: Determine fork owner
+        if: ${{ !inputs.dry_run }}
+        id: fork
+        run: |
+          OWNER="${{ secrets.OPERATORHUB_FORK_OWNER }}"
+          if [ -z "$OWNER" ]; then
+            OWNER="${{ github.repository_owner }}"
+          fi
+          echo "owner=${OWNER}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout community-operators fork
+        if: ${{ !inputs.dry_run }}
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ steps.fork.outputs.owner }}/community-operators
+          path: community-operators
+          token: ${{ secrets.OPERATORHUB_PAT }}
+          fetch-depth: 0
+
+      - name: Sync fork with upstream main
+        if: ${{ !inputs.dry_run }}
+        working-directory: community-operators
+        run: |
+          git remote add upstream https://github.com/k8s-operatorhub/community-operators.git
+          git fetch upstream main
+          git checkout -B release-keycloak-operator-${{ steps.version.outputs.version }} upstream/main
+
+      - name: Copy bundle into community-operators
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          DEST="community-operators/operators/hostzero-keycloak-operator/$VERSION"
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
+          cp -r bundle/manifests "$DEST/"
+          cp -r bundle/metadata "$DEST/"
+          if [ -d bundle/tests ]; then cp -r bundle/tests "$DEST/"; fi
+
+      - name: Commit and push branch
+        if: ${{ !inputs.dry_run }}
+        working-directory: community-operators
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "hostzero-bot"
+          git config user.email "opensource@hostzero.com"
+          git add operators/hostzero-keycloak-operator
+          git commit -s -m "operator hostzero-keycloak-operator (${VERSION})"
+          git push --force origin HEAD
+
+      - name: Open pull request
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.OPERATORHUB_PAT }}
+          VERSION: ${{ steps.version.outputs.version }}
+          FORK_OWNER: ${{ steps.fork.outputs.owner }}
+        run: |
+          gh pr create \
+            --repo k8s-operatorhub/community-operators \
+            --head "${FORK_OWNER}:release-keycloak-operator-${VERSION}" \
+            --base main \
+            --title "operator hostzero-keycloak-operator (${VERSION})" \
+            --body "Automated release of hostzero-keycloak-operator ${VERSION}. Generated from https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}."

@@ -240,6 +240,27 @@ This operator is developed and maintained by [**Hostzero GmbH**](https://hostzer
 
 [Contact us](https://hostzero.com/contact-us) for enterprise licensing and support options.
 
+## Publishing to OperatorHub.io
+
+The operator is also distributed via [OperatorHub.io](https://operatorhub.io/operator/hostzero-keycloak-operator). New versions are published by:
+
+1. Tagging a release (`vX.Y.Z`) so the regular `Release` workflow ships the controller image and Helm chart.
+2. Running the `Publish to OperatorHub.io` workflow manually (`Actions → Publish to OperatorHub.io → Run workflow`) with the same version (and the previous version under `replaces` to wire the upgrade graph).
+
+That workflow regenerates the OLM bundle (`make bundle`), copies it into a fork of `k8s-operatorhub/community-operators` and opens a PR. The upstream pipeline merges automatically once its CI passes (the reviewers in `operators/hostzero-keycloak-operator/ci.yaml` are pre-approved).
+
+Repository secrets required by the workflow:
+
+- `OPERATORHUB_PAT` — PAT with `repo` scope on the community-operators fork.
+- `OPERATORHUB_FORK_OWNER` — owner of the fork (defaults to the org running the workflow).
+
+To regenerate the bundle locally:
+
+```sh
+make bundle VERSION=0.8.0
+./bin/operator-sdk bundle validate ./bundle --select-optional name=operatorhub
+```
+
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our development process and how to submit pull requests.
