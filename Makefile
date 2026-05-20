@@ -306,10 +306,10 @@ kind-delete: ## Delete the Kind cluster.
 # Defaults to the Helm chart version so a single source of truth drives releases.
 VERSION ?= $(shell yq '.version' charts/keycloak-operator/Chart.yaml)
 
-# Channel selection for the generated bundle. `alpha` matches the existing
-# OperatorHub.io entry; switch to `stable` once we're confident in upgrades.
-CHANNELS ?= alpha
-DEFAULT_CHANNEL ?= alpha
+# Channel selection for the generated bundle. The existing OperatorHub.io entry
+# lives on `stable`; staying on the same channel preserves the upgrade graph.
+CHANNELS ?= stable
+DEFAULT_CHANNEL ?= stable
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
