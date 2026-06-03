@@ -31,8 +31,8 @@ func TestKeycloakGroupNestedReconcile(t *testing.T) {
 	skipIfNoCluster(t)
 	skipIfNoKeycloakAccess(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "nested-reconcile")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "nested-reconcile")
 	kc := getInternalKeycloakClient(t)
 
 	// ChildSurvivesReReconcile is the most direct regression test for the

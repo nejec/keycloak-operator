@@ -18,8 +18,8 @@ import (
 func TestKeycloakGroupE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "group")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "group")
 
 	t.Run("BasicGroup", func(t *testing.T) {
 		groupName := fmt.Sprintf("test-group-%d", time.Now().UnixNano())

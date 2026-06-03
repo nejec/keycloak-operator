@@ -22,8 +22,8 @@ import (
 func TestSecretChangeDetection(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "secret-change")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "secret-change")
 
 	t.Run("PasswordReSyncOnSecretChange", func(t *testing.T) {
 		// Create a user
@@ -161,7 +161,7 @@ func TestParentDeletionWithChildren(t *testing.T) {
 	t.Skip("Known limitation: watches don't immediately detect parent deletion. Children update on next scheduled reconciliation.")
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
+	instanceName, _ := getOrCreateInstance(t)
 
 	t.Run("RealmDeletedWithUsers", func(t *testing.T) {
 		// Create a realm
@@ -172,7 +172,7 @@ func TestParentDeletionWithChildren(t *testing.T) {
 				Namespace: testNamespace,
 			},
 			Spec: keycloakv1beta1.KeycloakRealmSpec{
-				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName, Namespace: &instanceNS},
+				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName},
 				Definition: rawJSON(fmt.Sprintf(`{
 					"realm": "%s",
 					"enabled": true
@@ -263,7 +263,7 @@ func TestParentDeletionWithChildren(t *testing.T) {
 	})
 
 	t.Run("UserDeletedWithRoleMapping", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "orphan-mapping")
+		realmName := createTestRealm(t, instanceName, "orphan-mapping")
 
 		// Create a user
 		userName := fmt.Sprintf("mapping-user-%d", time.Now().UnixNano())
@@ -371,8 +371,8 @@ func TestDriftDetection(t *testing.T) {
 	skipIfNoCluster(t)
 	skipIfNoKeycloakAccess(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "drift")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "drift")
 
 	t.Run("UserReconciliationAfterDirectModification", func(t *testing.T) {
 		// Create a user
@@ -467,8 +467,8 @@ func TestDriftDetection(t *testing.T) {
 func TestGenerationTracking(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "generation")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "generation")
 
 	t.Run("ObservedGenerationUpdatedOnSpecChange", func(t *testing.T) {
 		// Create a user

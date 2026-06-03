@@ -260,7 +260,7 @@ func createTestInstance(t *testing.T) string {
 }
 
 // createTestRealm creates a test realm and returns its name
-func createTestRealm(t *testing.T, instanceName, instanceNS, suffix string) string {
+func createTestRealm(t *testing.T, instanceName, suffix string) string {
 	realmName := fmt.Sprintf("test-realm-%s-%d", suffix, time.Now().UnixNano())
 	realm := &keycloakv1beta1.KeycloakRealm{
 		ObjectMeta: metav1.ObjectMeta{
@@ -268,7 +268,7 @@ func createTestRealm(t *testing.T, instanceName, instanceNS, suffix string) stri
 			Namespace: testNamespace,
 		},
 		Spec: keycloakv1beta1.KeycloakRealmSpec{
-			InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName, Namespace: &instanceNS},
+			InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName},
 			Definition: rawJSON(fmt.Sprintf(`{
 				"realm": "%s",
 				"enabled": true
@@ -296,7 +296,7 @@ func createTestRealm(t *testing.T, instanceName, instanceNS, suffix string) stri
 }
 
 // createTestRealmWithOrganizations creates a test realm with organizations feature enabled (required for Keycloak 26+)
-func createTestRealmWithOrganizations(t *testing.T, instanceName, instanceNS, suffix string) string {
+func createTestRealmWithOrganizations(t *testing.T, instanceName, suffix string) string {
 	realmName := fmt.Sprintf("test-realm-%s-%d", suffix, time.Now().UnixNano())
 	realm := &keycloakv1beta1.KeycloakRealm{
 		ObjectMeta: metav1.ObjectMeta{
@@ -304,7 +304,7 @@ func createTestRealmWithOrganizations(t *testing.T, instanceName, instanceNS, su
 			Namespace: testNamespace,
 		},
 		Spec: keycloakv1beta1.KeycloakRealmSpec{
-			InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName, Namespace: &instanceNS},
+			InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName},
 			Definition: rawJSON(fmt.Sprintf(`{
 				"realm": "%s",
 				"enabled": true,

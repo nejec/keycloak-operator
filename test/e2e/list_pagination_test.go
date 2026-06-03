@@ -33,8 +33,8 @@ func TestListPaginationE2E(t *testing.T) {
 	const overflow = 5 // items in the 2nd page; total per type = 100 + overflow
 	const want = 100 + overflow
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "pagination")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "pagination")
 	kc := getInternalKeycloakClient(t)
 
 	suffix := time.Now().UnixNano()

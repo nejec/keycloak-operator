@@ -18,8 +18,8 @@ import (
 func TestKeycloakIdentityProviderE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "idp")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "idp")
 
 	t.Run("OIDCIdentityProvider", func(t *testing.T) {
 		idpName := fmt.Sprintf("test-oidc-idp-%d", time.Now().UnixNano())

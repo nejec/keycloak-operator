@@ -31,7 +31,7 @@ func TestKeycloakOrganizationE2E(t *testing.T) {
 	}
 
 	// Create a realm with organizations enabled (required for Keycloak 26+)
-	realmName := createTestRealmWithOrganizations(t, instanceName, instanceNS, "organization")
+	realmName := createTestRealmWithOrganizations(t, instanceName, "organization")
 
 	t.Run("BasicOrganization", func(t *testing.T) {
 		orgName := fmt.Sprintf("test-org-%d", time.Now().UnixNano())

@@ -19,8 +19,8 @@ import (
 func TestKeycloakUserCredentialE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "usercred")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "usercred")
 
 	t.Run("CreateSecretForUser", func(t *testing.T) {
 		// First create a user
@@ -291,8 +291,8 @@ func TestKeycloakUserCredentialE2E(t *testing.T) {
 func TestKeycloakUserCredentialCleanup(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "usercred-cleanup")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "usercred-cleanup")
 
 	t.Run("SecretDeletedWithCredential", func(t *testing.T) {
 		// Create a user

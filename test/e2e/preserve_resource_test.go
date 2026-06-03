@@ -24,7 +24,7 @@ func TestPreserveResourceAnnotation(t *testing.T) {
 	skipIfNoCluster(t)
 	skipIfNoKeycloakAccess(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
+	instanceName, _ := getOrCreateInstance(t)
 
 	t.Run("PreserveRealmOnDeletion", func(t *testing.T) {
 		// Create a realm with the preserve annotation
@@ -39,7 +39,7 @@ func TestPreserveResourceAnnotation(t *testing.T) {
 				},
 			},
 			Spec: keycloakv1beta1.KeycloakRealmSpec{
-				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName, Namespace: &instanceNS},
+				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName},
 				Definition: rawJSON(fmt.Sprintf(`{
 					"realm": "%s",
 					"displayName": "Preserved Realm",
@@ -98,7 +98,7 @@ func TestPreserveResourceAnnotation(t *testing.T) {
 
 	t.Run("PreserveUserOnDeletion", func(t *testing.T) {
 		// Create a realm first (without preserve annotation)
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-user")
+		realmName := createTestRealm(t, instanceName, "preserve-user")
 
 		// Create a user with the preserve annotation
 		userName := fmt.Sprintf("preserved-user-%d", time.Now().UnixNano())
@@ -179,7 +179,7 @@ func TestPreserveResourceAnnotation(t *testing.T) {
 
 	t.Run("PreserveClientOnDeletion", func(t *testing.T) {
 		// Create a realm first
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-client")
+		realmName := createTestRealm(t, instanceName, "preserve-client")
 
 		// Create a client with the preserve annotation
 		clientName := fmt.Sprintf("preserved-client-%d", time.Now().UnixNano())
@@ -269,7 +269,7 @@ func TestPreserveResourceAnnotation(t *testing.T) {
 				// No preserve annotation
 			},
 			Spec: keycloakv1beta1.KeycloakRealmSpec{
-				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName, Namespace: &instanceNS},
+				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName},
 				Definition: rawJSON(fmt.Sprintf(`{
 					"realm": "%s",
 					"displayName": "Normal Delete Realm",
@@ -333,7 +333,7 @@ func TestPreserveResourceAnnotation(t *testing.T) {
 				},
 			},
 			Spec: keycloakv1beta1.KeycloakRealmSpec{
-				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName, Namespace: &instanceNS},
+				InstanceRef: &keycloakv1beta1.ResourceRef{Name: instanceName},
 				Definition: rawJSON(fmt.Sprintf(`{
 					"realm": "%s",
 					"enabled": true
@@ -456,7 +456,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveClientScope", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-cs")
+		realmName := createTestRealm(t, instanceName, "preserve-cs")
 		scopeName := fmt.Sprintf("preserve-scope-%d", time.Now().UnixNano())
 
 		scope := &keycloakv1beta1.KeycloakClientScope{
@@ -496,7 +496,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveProtocolMapper", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-pm")
+		realmName := createTestRealm(t, instanceName, "preserve-pm")
 
 		// Parent client scope (no preserve annotation; will be deleted with the realm).
 		scopeName := fmt.Sprintf("pm-parent-scope-%d", time.Now().UnixNano())
@@ -574,7 +574,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveGroup", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-grp")
+		realmName := createTestRealm(t, instanceName, "preserve-grp")
 		groupName := fmt.Sprintf("preserve-group-%d", time.Now().UnixNano())
 
 		group := &keycloakv1beta1.KeycloakGroup{
@@ -613,7 +613,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveRealmRole", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-role")
+		realmName := createTestRealm(t, instanceName, "preserve-role")
 		roleName := fmt.Sprintf("preserve-role-%d", time.Now().UnixNano())
 
 		role := &keycloakv1beta1.KeycloakRole{
@@ -650,7 +650,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveRoleMapping", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-rm")
+		realmName := createTestRealm(t, instanceName, "preserve-rm")
 
 		// Create the user that owns the mapping.
 		userName := fmt.Sprintf("preserve-rm-user-%d", time.Now().UnixNano())
@@ -729,7 +729,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveComponent", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-cmp")
+		realmName := createTestRealm(t, instanceName, "preserve-cmp")
 		componentName := fmt.Sprintf("preserve-cmp-%d", time.Now().UnixNano())
 
 		component := &keycloakv1beta1.KeycloakComponent{
@@ -777,7 +777,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveIdentityProvider", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-idp")
+		realmName := createTestRealm(t, instanceName, "preserve-idp")
 		idpName := fmt.Sprintf("preserve-idp-%d", time.Now().UnixNano())
 
 		idp := &keycloakv1beta1.KeycloakIdentityProvider{
@@ -829,7 +829,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 			t.Skipf("Organizations require Keycloak 26+, current version: %q", instance.Status.Version)
 		}
 
-		realmName := createTestRealmWithOrganizations(t, instanceName, instanceNS, "preserve-org")
+		realmName := createTestRealmWithOrganizations(t, instanceName, "preserve-org")
 		orgName := fmt.Sprintf("preserve-org-%d", time.Now().UnixNano())
 
 		org := &keycloakv1beta1.KeycloakOrganization{
@@ -873,7 +873,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveAuthenticationFlow", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-flow")
+		realmName := createTestRealm(t, instanceName, "preserve-flow")
 		flowAlias := fmt.Sprintf("preserve-flow-%d", time.Now().UnixNano())
 
 		flow := &keycloakv1beta1.KeycloakAuthenticationFlow{
@@ -917,7 +917,7 @@ func TestPreserveResourceAnnotationAcrossResources(t *testing.T) {
 	})
 
 	t.Run("PreserveRequiredAction", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "preserve-ra")
+		realmName := createTestRealm(t, instanceName, "preserve-ra")
 		raName := fmt.Sprintf("preserve-ra-%d", time.Now().UnixNano())
 
 		ra := &keycloakv1beta1.KeycloakRequiredAction{

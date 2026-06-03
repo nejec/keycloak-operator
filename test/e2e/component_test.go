@@ -18,8 +18,8 @@ import (
 func TestKeycloakComponentE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "component")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "component")
 
 	t.Run("RSAKeyProvider", func(t *testing.T) {
 		componentName := fmt.Sprintf("rsa-key-%d", time.Now().UnixNano())

@@ -18,8 +18,8 @@ import (
 func TestKeycloakClientScopeE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "clientscope")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "clientscope")
 
 	t.Run("BasicClientScope", func(t *testing.T) {
 		scopeName := fmt.Sprintf("test-scope-%d", time.Now().UnixNano())

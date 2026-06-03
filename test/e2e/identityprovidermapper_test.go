@@ -21,8 +21,8 @@ import (
 func TestKeycloakIdentityProviderMapperE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "idpmapper")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "idpmapper")
 
 	t.Run("RoleIdentityProviderMapper", func(t *testing.T) {
 		idp := createOIDCIdentityProvider(t, realmName, "role-idp")

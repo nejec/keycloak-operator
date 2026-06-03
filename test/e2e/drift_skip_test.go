@@ -41,10 +41,10 @@ func TestDriftSkip(t *testing.T) {
 	skipIfNoCluster(t)
 	skipIfNoKeycloakAccess(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
+	instanceName, _ := getOrCreateInstance(t)
 
 	t.Run("KeycloakClient_UnorderedRedirectUrisSkipsUpdate", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "drift-client")
+		realmName := createTestRealm(t, instanceName, "drift-client")
 
 		clientName := fmt.Sprintf("drift-client-%d", time.Now().UnixNano())
 		clientDef := rawJSON(fmt.Sprintf(`{
@@ -91,7 +91,7 @@ func TestDriftSkip(t *testing.T) {
 	})
 
 	t.Run("KeycloakIdentityProvider_SecretMaskNoLoop", func(t *testing.T) {
-		realmName := createTestRealm(t, instanceName, instanceNS, "drift-idp")
+		realmName := createTestRealm(t, instanceName, "drift-idp")
 
 		idpName := fmt.Sprintf("drift-idp-%d", time.Now().UnixNano())
 
@@ -190,7 +190,7 @@ func TestDriftSkip(t *testing.T) {
 				Namespace: testNamespace,
 			},
 			Spec: keycloakv1beta1.KeycloakRealmSpec{
-				InstanceRef:   &keycloakv1beta1.ResourceRef{Name: instanceName, Namespace: &instanceNS},
+				InstanceRef:   &keycloakv1beta1.ResourceRef{Name: instanceName},
 				SmtpSecretRef: &keycloakv1beta1.SmtpSecretRefSpec{Name: smtpSecret.Name},
 				Definition: rawJSON(fmt.Sprintf(`{
 					"realm": "%s",

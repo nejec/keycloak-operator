@@ -328,9 +328,10 @@ metadata:
   namespace: ${OPERATOR_NAMESPACE}
 spec:
   baseUrl: http://keycloak.${KEYCLOAK_NAMESPACE}.svc.cluster.local
-  credentials:
-    secretRef:
-      name: keycloak-admin-credentials
+  auth:
+    passwordGrant:
+      secretRef:
+        name: keycloak-admin-credentials
 EOF
     
     log_success "Test resources created"

@@ -21,8 +21,8 @@ import (
 func TestKeycloakClientE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "client")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "client")
 
 	t.Run("ConfidentialClient", func(t *testing.T) {
 		// Create confidential client with service account

@@ -18,8 +18,8 @@ import (
 func TestKeycloakRoleMappingE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "rolemapping")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "rolemapping")
 
 	t.Run("MapRealmRoleToUser", func(t *testing.T) {
 		// Create a user first
@@ -319,8 +319,8 @@ func TestKeycloakRoleMappingE2E(t *testing.T) {
 func TestKeycloakRoleMappingCleanup(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "rolemapping-cleanup")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "rolemapping-cleanup")
 
 	t.Run("RoleMappingRemovalOnDelete", func(t *testing.T) {
 		// Create a user
@@ -412,8 +412,8 @@ func TestKeycloakRoleMappingCleanup(t *testing.T) {
 func TestKeycloakRoleMappingRoleRefE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "rolemapping-roleref")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "rolemapping-roleref")
 
 	t.Run("RealmRoleViaRoleRef", func(t *testing.T) {
 		userName := fmt.Sprintf("roleref-user-%d", time.Now().UnixNano())
@@ -600,8 +600,8 @@ func TestKeycloakRoleMappingRoleRefE2E(t *testing.T) {
 func TestKeycloakClientRoleMapping(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "clientrolemapping")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "clientrolemapping")
 
 	t.Run("MapClientRoleToUser", func(t *testing.T) {
 		// Create a client with roles

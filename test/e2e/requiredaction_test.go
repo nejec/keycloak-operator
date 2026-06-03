@@ -18,8 +18,8 @@ import (
 func TestKeycloakRequiredActionE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "reqaction")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "reqaction")
 
 	t.Run("ConfigureBuiltInAction", func(t *testing.T) {
 		raName := fmt.Sprintf("verify-email-%d", time.Now().UnixNano())

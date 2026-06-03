@@ -18,8 +18,8 @@ import (
 func TestKeycloakProtocolMapperE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "protocolmapper")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "protocolmapper")
 
 	t.Run("ClientProtocolMapper", func(t *testing.T) {
 		// First create a client

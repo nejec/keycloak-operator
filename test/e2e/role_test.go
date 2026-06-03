@@ -18,8 +18,8 @@ import (
 func TestKeycloakRoleE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "role")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "role")
 
 	t.Run("RealmRole", func(t *testing.T) {
 		roleName := fmt.Sprintf("test-role-%d", time.Now().UnixNano())

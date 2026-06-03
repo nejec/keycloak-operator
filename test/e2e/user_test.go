@@ -17,8 +17,8 @@ import (
 func TestKeycloakUserE2E(t *testing.T) {
 	skipIfNoCluster(t)
 
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "user")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "user")
 
 	t.Run("BasicUser", func(t *testing.T) {
 		// Create user

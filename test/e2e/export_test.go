@@ -21,8 +21,8 @@ func TestExportBasicRealm(t *testing.T) {
 	skipIfNoKeycloakAccess(t)
 
 	// Setup: Create a test realm with some resources
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "export")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "export")
 
 	// Get Keycloak client
 	kc := getInternalKeycloakClient(t)
@@ -57,8 +57,8 @@ func TestExportWithFiltering(t *testing.T) {
 	skipIfNoKeycloakAccess(t)
 
 	// Setup
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "filter")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "filter")
 
 	kc := getInternalKeycloakClient(t)
 	log := ctrl.Log.WithName("export-test")
@@ -85,8 +85,8 @@ func TestExportSkipsDefaultResources(t *testing.T) {
 	skipIfNoKeycloakAccess(t)
 
 	// Setup
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "defaults")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "defaults")
 
 	kc := getInternalKeycloakClient(t)
 	log := ctrl.Log.WithName("export-test")
@@ -121,8 +121,8 @@ func TestExportIncludesDefaultsWhenRequested(t *testing.T) {
 	skipIfNoKeycloakAccess(t)
 
 	// Setup
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "withdefaults")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "withdefaults")
 
 	kc := getInternalKeycloakClient(t)
 	log := ctrl.Log.WithName("export-test")
@@ -338,8 +338,8 @@ func TestExportGeneratesValidYAML(t *testing.T) {
 	skipIfNoKeycloakAccess(t)
 
 	// Setup
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "yaml-valid")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "yaml-valid")
 
 	kc := getInternalKeycloakClient(t)
 	log := ctrl.Log.WithName("export-test")
@@ -418,8 +418,8 @@ func TestExportWithCustomClient(t *testing.T) {
 	skipIfNoKeycloakAccess(t)
 
 	// This test creates a custom client and verifies it's exported correctly
-	instanceName, instanceNS := getOrCreateInstance(t)
-	realmName := createTestRealm(t, instanceName, instanceNS, "custom-client")
+	instanceName, _ := getOrCreateInstance(t)
+	realmName := createTestRealm(t, instanceName, "custom-client")
 
 	kc := getInternalKeycloakClient(t)
 
